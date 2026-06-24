@@ -129,6 +129,27 @@ header{padding:32px 0 24px;display:flex;align-items:center;justify-content:space
 footer{text-align:center;padding:40px 0 32px;font-size:12px;color:var(--text3)}
 footer a{color:var(--gold);text-decoration:none}
 footer a:hover{text-decoration:underline}
+.copy-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border:none;border-radius:5px;
+  background:transparent;color:var(--text3);cursor:pointer;
+  transition:all .15s;flex-shrink:0;margin-left:6px;vertical-align:middle;
+}
+.copy-btn:hover{background:var(--gold-glow);color:var(--gold)}
+.copy-btn.copied{color:var(--green);background:rgba(14,203,129,.1)}
+.copy-btn svg{width:13px;height:13px}
+.addr-copy-wrap{display:inline-flex;align-items:center;gap:4px}
+.input-copy-wrap{position:relative;display:flex;align-items:center;width:100%}
+.input-copy-wrap input{padding-right:38px}
+.input-copy-btn{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:26px;height:26px;border:none;border-radius:5px;
+  background:transparent;color:var(--text3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.input-copy-btn:hover{background:var(--gold-glow);color:var(--gold)}
+.input-copy-btn.copied{color:var(--green);background:rgba(14,203,129,.1)}
+.input-copy-btn svg{width:14px;height:14px}
 @media(max-width:480px){
   html{font-size:14px}
   header{flex-direction:column;align-items:flex-start}
@@ -150,7 +171,7 @@ footer a:hover{text-decoration:underline}
   </header>
 
   <div class="info-bar">
-    <div>合约: <span>0xF57418e90Ba1957998102cf16f82c88190A7b1b7</span></div>
+    <div>合约: <span class="addr-copy-wrap">0xF57418e90Ba1957998102cf16f82c88190A7b1b7<button class="copy-btn" data-copy="0xF57418e90Ba1957998102cf16f82c88190A7b1b7" onclick="copyText(this.dataset.copy,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></span></div>
     <div>网络: <span>BSC Mainnet</span></div>
     <div>全局钱包数: <span id="globalWalletCount">--</span></div>
   </div>
@@ -204,7 +225,7 @@ footer a:hover{text-decoration:underline}
       <div class="card-title"><div class="icon gold">S</div>选择钱包</div>
       <div class="input-group">
         <label>钱包地址</label>
-        <input type="text" id="manageAddr" placeholder="0x... 或从列表中选择">
+        <div class="input-copy-wrap"><input type="text" id="manageAddr" placeholder="0x... 或从列表中选择"><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <div id="manageWalletInfo" style="margin-top:12px"></div>
     </div>
@@ -212,11 +233,11 @@ footer a:hover{text-decoration:underline}
       <div class="card-title"><div class="icon green">W</div>设置白名单地址</div>
       <div class="input-group">
         <label>当前白名单</label>
-        <input type="text" id="currentWhitelist" placeholder="读取中..." disabled>
+        <div class="input-copy-wrap"><input type="text" id="currentWhitelist" placeholder="读取中..." disabled><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <div class="input-group">
         <label>新白名单地址</label>
-        <input type="text" id="newWhitelist" placeholder="0x...">
+        <div class="input-copy-wrap"><input type="text" id="newWhitelist" placeholder="0x..."><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <button class="btn btn-gold" onclick="setWhitelist()">更新白名单</button>
       <div class="output" id="whitelistOutput"></div>
@@ -230,7 +251,7 @@ footer a:hover{text-decoration:underline}
       <p style="font-size:13px;color:var(--text2);margin-bottom:12px">将钱包内所有 BNB 提取到白名单地址。任何人可调用。</p>
       <div class="input-group">
         <label>钱包地址</label>
-        <input type="text" id="extractBNBAddr" placeholder="0x...">
+        <div class="input-copy-wrap"><input type="text" id="extractBNBAddr" placeholder="0x..."><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <div class="row">
         <div class="input-group">
@@ -248,11 +269,11 @@ footer a:hover{text-decoration:underline}
       <div class="card-title"><div class="icon gold">T</div>提取代币</div>
       <div class="input-group">
         <label>钱包地址</label>
-        <input type="text" id="extractTokenAddr" placeholder="0x...">
+        <div class="input-copy-wrap"><input type="text" id="extractTokenAddr" placeholder="0x..."><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <div class="input-group">
         <label>代币地址</label>
-        <input type="text" id="tokenAddr" placeholder="0x...">
+        <div class="input-copy-wrap"><input type="text" id="tokenAddr" placeholder="0x..."><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <div class="row">
         <div class="input-group">
@@ -275,11 +296,11 @@ footer a:hover{text-decoration:underline}
       <div class="row">
         <div class="input-group">
           <label>钱包地址</label>
-          <input type="text" id="ownerQueryAddr" placeholder="0x...">
+          <div class="input-copy-wrap"><input type="text" id="ownerQueryAddr" placeholder="0x..."><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
         </div>
         <div class="input-group">
           <label>当前 Owner</label>
-          <input type="text" id="ownerResult" placeholder="点击查询" disabled>
+          <div class="input-copy-wrap"><input type="text" id="ownerResult" placeholder="点击查询" disabled><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
         </div>
       </div>
       <button class="btn btn-outline" onclick="queryOwner()">查询</button>
@@ -288,11 +309,11 @@ footer a:hover{text-decoration:underline}
       <div class="card-title"><div class="icon green">R</div>转让所有权</div>
       <div class="input-group">
         <label>钱包地址</label>
-        <input type="text" id="transferWalletAddr" placeholder="0x...">
+        <div class="input-copy-wrap"><input type="text" id="transferWalletAddr" placeholder="0x..."><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <div class="input-group">
         <label>新 Owner 地址</label>
-        <input type="text" id="newOwnerAddr" placeholder="0x...">
+        <div class="input-copy-wrap"><input type="text" id="newOwnerAddr" placeholder="0x..."><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <button class="btn btn-gold" onclick="transferOwnership()">转让所有权</button>
       <div class="output" id="transferOutput"></div>
@@ -302,7 +323,7 @@ footer a:hover{text-decoration:underline}
       <p style="font-size:13px;color:var(--text2);margin-bottom:14px">放弃后无法恢复，所有 onlyOwner 函数将永久不可调用。</p>
       <div class="input-group">
         <label>钱包地址</label>
-        <input type="text" id="renounceWalletAddr" placeholder="0x...">
+        <div class="input-copy-wrap"><input type="text" id="renounceWalletAddr" placeholder="0x..."><button class="input-copy-btn" onclick="copyText(this.previousElementSibling.value,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
       </div>
       <button class="btn btn-red" onclick="renounceOwnership()">放弃所有权</button>
       <div class="output" id="renounceOutput"></div>
@@ -342,6 +363,28 @@ var ERC20_ABI=[
 ];
 
 var provider=null, signer=null, userAddress=null;
+
+function copyText(text,btn){
+  if(!text)return;
+  navigator.clipboard.writeText(text).then(function(){
+    if(btn){
+      var orig=btn.innerHTML;
+      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      btn.classList.add('copied');
+      setTimeout(function(){btn.innerHTML=orig;btn.classList.remove('copied')},1500);
+    }
+    toast('已复制','success');
+  }).catch(function(){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');
+      if(btn){var orig=btn.innerHTML;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';btn.classList.add('copied');setTimeout(function(){btn.innerHTML=orig;btn.classList.remove('copied')},1500)}
+      toast('已复制','success');
+    }catch(e){toast('复制失败','error')}
+    document.body.removeChild(ta);
+  });
+}
 
 function toast(msg, type){
   type=type||'info';
@@ -470,7 +513,8 @@ async function createWallet(){
     showOutput('createOutput',
       '<span class="success">部署成功</span><br>'+
       '交易: '+txLink(tx.hash)+'<br>'+
-      '钱包地址: <span class="success">'+wAddr+'</span>'
+      '钱包地址: <span class="success">'+wAddr+'</span> '+
+      '<button class="copy-btn" data-copy="'+wAddr+'" onclick="copyText(this.dataset.copy,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
     );
     toast('钱包创建成功!','success');
     loadMyWallets();
@@ -496,7 +540,9 @@ async function loadMyWallets(){
       var addr=await f.getWallet(userAddress,i);
       html+='<div class="wallet-item" onclick="selectWallet(\''+addr+'\')">';
       html+='<div><div class="addr">'+addr+'</div><div class="idx">#'+i+'</div></div>';
-      html+='<span class="badge badge-gold">My</span></div>';
+      html+='<div style="display:flex;align-items:center;gap:6px">';
+      html+='<button class="copy-btn" data-copy="'+addr+'" onclick="event.stopPropagation();copyText(this.dataset.copy,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>';
+      html+='<span class="badge badge-gold">My</span></div></div>';
     }
     list.innerHTML=html;
   }catch(e){console.error(e)}
