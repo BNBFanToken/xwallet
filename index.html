@@ -39,6 +39,18 @@ header{padding:32px 0 24px;display:flex;align-items:center;justify-content:space
   font-size:13px;color:var(--text2);font-family:var(--mono);
 }
 .info-bar span{color:var(--text)}
+.status-bar{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 20px;margin-bottom:24px;
+}
+.status-row{display:flex;gap:24px;flex-wrap:wrap}
+.status-item{flex:1;min-width:140px}
+.status-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:500}
+.status-value{font-family:var(--mono);font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-dot-on{background:var(--green);box-shadow:0 0 8px rgba(14,203,129,.5);animation:pulse 2s infinite}
+.status-dot-off{background:var(--text3)}
+.status-value.connected{color:var(--green)}
 .card{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:24px;margin-bottom:20px;transition:border-color .2s;
@@ -140,6 +152,28 @@ footer a:hover{text-decoration:underline}
   <div class="info-bar">
     <div>合约: <span>0xF57418e90Ba1957998102cf16f82c88190A7b1b7</span></div>
     <div>网络: <span>BSC Mainnet</span></div>
+    <div>全局钱包数: <span id="globalWalletCount">--</span></div>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    <div class="status-row">
+      <div class="status-item">
+        <div class="status-label">连接状态</div>
+        <div class="status-value" id="statusConnected"><span class="status-dot status-dot-off"></span> 未连接</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">当前地址</div>
+        <div class="status-value" id="statusAddr">--</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">网络</div>
+        <div class="status-value" id="statusNetwork">--</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">BNB 余额</div>
+        <div class="status-value" id="statusBalance">--</div>
+      </div>
+    </div>
   </div>
 
   <div class="tabs">
@@ -336,6 +370,34 @@ async function ensureConnected(){
   return !!signer;
 }
 
+async function updateStatus(){
+  if(!userAddress||!provider){
+    document.getElementById('statusConnected').innerHTML='<span class="status-dot status-dot-off"></span> 未连接';
+    document.getElementById('statusConnected').className='status-value';
+    document.getElementById('statusAddr').textContent='--';
+    document.getElementById('statusNetwork').textContent='--';
+    document.getElementById('statusBalance').textContent='--';
+    return;
+  }
+  document.getElementById('statusConnected').innerHTML='<span class="status-dot status-dot-on"></span> 已连接';
+  document.getElementById('statusConnected').className='status-value connected';
+  document.getElementById('statusAddr').textContent=userAddress;
+  try{
+    var chainId=await provider.send('eth_chainId',[]);
+    var isBsc=chainId===BSC_CHAIN_ID;
+    document.getElementById('statusNetwork').textContent=isBsc?'BSC Mainnet (56)':'未知网络 ('+parseInt(chainId,16)+')';
+    document.getElementById('statusNetwork').style.color=isBsc?'var(--green)':'var(--red)';
+  }catch(e){
+    document.getElementById('statusNetwork').textContent='查询失败';
+  }
+  try{
+    var bal=await provider.getBalance(userAddress);
+    document.getElementById('statusBalance').textContent=ethers.formatEther(bal)+' BNB';
+  }catch(e){
+    document.getElementById('statusBalance').textContent='查询失败';
+  }
+}
+
 async function connectWallet(){
   if(typeof window.ethereum==='undefined'){
     toast('请安装 MetaMask 钱包','error');
@@ -365,6 +427,7 @@ async function connectWallet(){
     btn.textContent=shortAddr(userAddress);
     document.getElementById('createBtn').disabled=false;
     document.getElementById('refreshBtn').disabled=false;
+    updateStatus();
     toast('钱包已连接: '+shortAddr(userAddress),'success');
     loadMyWallets();
   }catch(e){
@@ -411,6 +474,7 @@ async function createWallet(){
     );
     toast('钱包创建成功!','success');
     loadMyWallets();
+    loadGlobalWalletCount();
   }catch(e){
     showOutput('createOutput','<span class="error">'+(e.reason||e.message)+'</span>');
     toast('创建失败','error');
@@ -437,6 +501,19 @@ async function loadMyWallets(){
     list.innerHTML=html;
   }catch(e){console.error(e)}
 }
+
+async function loadGlobalWalletCount(){
+  try{
+    var p=new ethers.JsonRpcProvider(BSC_RPC);
+    var f=new ethers.Contract(FACTORY,FACTORY_ABI,p);
+    var count=await f.getAllWalletsCount();
+    document.getElementById('globalWalletCount').textContent=count.toString();
+  }catch(e){
+    document.getElementById('globalWalletCount').textContent='--';
+  }
+}
+
+loadGlobalWalletCount();
 
 function selectWallet(addr){
   document.getElementById('manageAddr').value=addr;
