@@ -1,1 +1,572 @@
-test
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xwallet - Marketing Wallet Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b0d12;--surface:#12151d;--surface2:#191d28;--border:#262b3a;
+  --gold:#f0b90b;--gold-dim:#a37e0a;--gold-glow:rgba(240,185,11,.12);
+  --green:#0ecb81;--red:#f6465d;--text:#e8eaf0;--text2:#8b91a8;--text3:#515872;
+  --radius:10px;--mono:'JetBrains Mono',monospace;--sans:'Outfit',sans-serif;
+}
+html{font-size:15px}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(240,185,11,.06),transparent);pointer-events:none;z-index:0}
+.container{max-width:880px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+header{padding:32px 0 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#d4a20a);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#0b0d12;font-family:var(--mono);box-shadow:0 0 20px rgba(240,185,11,.25)}
+.logo h1{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.logo h1 span{color:var(--gold)}
+.connect-btn{
+  font-family:var(--sans);font-size:14px;font-weight:600;padding:10px 22px;border-radius:8px;
+  border:1.5px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;gap:8px;
+}
+.connect-btn:hover{background:var(--gold);color:#0b0d12}
+.connect-btn.connected{border-color:var(--green);color:var(--green)}
+.connect-btn.connected::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.info-bar{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 20px;margin-bottom:28px;display:flex;flex-wrap:wrap;gap:8px 24px;
+  font-size:13px;color:var(--text2);font-family:var(--mono);
+}
+.info-bar span{color:var(--text)}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px;margin-bottom:20px;transition:border-color .2s;
+}
+.card:hover{border-color:#353b50}
+.card-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.card-title .icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card-title .icon.gold{background:var(--gold-glow);color:var(--gold)}
+.card-title .icon.green{background:rgba(14,203,129,.1);color:var(--green)}
+.card-title .icon.red{background:rgba(246,70,93,.1);color:var(--red)}
+.card-title .icon.blue{background:rgba(86,131,255,.1);color:#5683ff}
+.input-group{margin-bottom:14px}
+.input-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.input-group input,.input-group select{
+  width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;
+  transition:border-color .2s;outline:none;
+}
+.input-group input:focus,.input-group select:focus{border-color:var(--gold)}
+.input-group input::placeholder{color:var(--text3)}
+.btn{
+  font-family:var(--sans);font-size:14px;font-weight:600;padding:11px 24px;border-radius:8px;
+  border:none;cursor:pointer;transition:all .2s;width:100%;
+}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-gold{background:var(--gold);color:#0b0d12}
+.btn-gold:hover:not(:disabled){background:#d4a20a;box-shadow:0 0 20px rgba(240,185,11,.3)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.btn-red{background:rgba(246,70,93,.12);color:var(--red);border:1px solid rgba(246,70,93,.25)}
+.btn-red:hover:not(:disabled){background:rgba(246,70,93,.2)}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>.input-group{flex:1;min-width:200px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface2);border-radius:8px;padding:4px}
+.tab{
+  flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;border-radius:6px;
+  cursor:pointer;color:var(--text2);transition:all .2s;border:none;background:transparent;font-family:var(--sans);
+}
+.tab.active{background:var(--surface);color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.tab:hover:not(.active){color:var(--text)}
+.output{
+  margin-top:14px;padding:12px 16px;background:var(--surface2);border-radius:8px;
+  font-family:var(--mono);font-size:12px;color:var(--text2);
+  border:1px solid var(--border);max-height:200px;overflow-y:auto;
+  display:none;word-break:break-all;line-height:1.8;
+}
+.output.show{display:block}
+.output .tx-link{color:var(--gold);text-decoration:none}
+.output .tx-link:hover{text-decoration:underline}
+.output .success{color:var(--green)}
+.output .error{color:var(--red)}
+.wallet-item{
+  padding:12px 16px;background:var(--surface2);border-radius:8px;margin-bottom:8px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  border:1px solid transparent;cursor:pointer;transition:all .15s;
+}
+.wallet-item:hover{border-color:var(--gold);background:#1a1e2c}
+.wallet-item .addr{font-family:var(--mono);font-size:13px;color:var(--text)}
+.wallet-item .idx{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:600}
+.badge-gold{background:var(--gold-glow);color:var(--gold)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:600;margin:28px 0 14px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-container{position:fixed;top:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  padding:14px 20px;border-radius:8px;font-size:13px;font-weight:500;
+  animation:slideIn .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:380px;
+}
+.toast.success{background:#0d2f22;border:1px solid var(--green);color:var(--green)}
+.toast.error{background:#2f0d14;border:1px solid var(--red);color:var(--red)}
+.toast.info{background:#1a1e2c;border:1px solid var(--gold);color:var(--gold)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+footer{text-align:center;padding:40px 0 32px;font-size:12px;color:var(--text3)}
+footer a{color:var(--gold);text-decoration:none}
+footer a:hover{text-decoration:underline}
+@media(max-width:480px){
+  html{font-size:14px}
+  header{flex-direction:column;align-items:flex-start}
+  .card{padding:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">X</div>
+      <h1><span>X</span>wallet</h1>
+    </div>
+    <button class="connect-btn" id="connectBtn" onclick="connectWallet()">连接钱包</button>
+  </header>
+
+  <div class="info-bar">
+    <div>合约: <span>0xF57418e90Ba1957998102cf16f82c88190A7b1b7</span></div>
+    <div>网络: <span>BSC Mainnet</span></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('create')">创建钱包</button>
+    <button class="tab" onclick="switchTab('manage')">管理钱包</button>
+    <button class="tab" onclick="switchTab('extract')">提取资金</button>
+    <button class="tab" onclick="switchTab('ownership')">所有权</button>
+  </div>
+
+  <!-- CREATE -->
+  <div id="tab-create">
+    <div class="card">
+      <div class="card-title"><div class="icon gold">+</div>创建营销钱包</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">调用工厂合约部署一个新的 MarketingWallet，Owner 将是你的钱包地址。</p>
+      <button class="btn btn-gold" id="createBtn" onclick="createWallet()" disabled>创建钱包</button>
+      <div class="output" id="createOutput"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="icon blue">L</div>我的钱包列表</div>
+      <div id="walletList"><p style="font-size:13px;color:var(--text3)">连接钱包后查看</p></div>
+      <button class="btn btn-outline" style="margin-top:14px" onclick="loadMyWallets()" disabled id="refreshBtn">刷新列表</button>
+    </div>
+  </div>
+
+  <!-- MANAGE -->
+  <div id="tab-manage" style="display:none">
+    <div class="card">
+      <div class="card-title"><div class="icon gold">S</div>选择钱包</div>
+      <div class="input-group">
+        <label>钱包地址</label>
+        <input type="text" id="manageAddr" placeholder="0x... 或从列表中选择">
+      </div>
+      <div id="manageWalletInfo" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="icon green">W</div>设置白名单地址</div>
+      <div class="input-group">
+        <label>当前白名单</label>
+        <input type="text" id="currentWhitelist" placeholder="读取中..." disabled>
+      </div>
+      <div class="input-group">
+        <label>新白名单地址</label>
+        <input type="text" id="newWhitelist" placeholder="0x...">
+      </div>
+      <button class="btn btn-gold" onclick="setWhitelist()">更新白名单</button>
+      <div class="output" id="whitelistOutput"></div>
+    </div>
+  </div>
+
+  <!-- EXTRACT -->
+  <div id="tab-extract" style="display:none">
+    <div class="card">
+      <div class="card-title"><div class="icon gold">B</div>提取 BNB</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">将钱包内所有 BNB 提取到白名单地址。任何人可调用。</p>
+      <div class="input-group">
+        <label>钱包地址</label>
+        <input type="text" id="extractBNBAddr" placeholder="0x...">
+      </div>
+      <div class="row">
+        <div class="input-group">
+          <label>合约 BNB 余额</label>
+          <input type="text" id="contractBNBBal" placeholder="点击查询" disabled>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn btn-outline" style="flex:0 0 auto;width:auto;padding:11px 18px" onclick="queryBNBBalance()">查询余额</button>
+        <button class="btn btn-gold" style="flex:1" onclick="extractBNB()">提取 BNB</button>
+      </div>
+      <div class="output" id="bnbExtractOutput"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="icon gold">T</div>提取代币</div>
+      <div class="input-group">
+        <label>钱包地址</label>
+        <input type="text" id="extractTokenAddr" placeholder="0x...">
+      </div>
+      <div class="input-group">
+        <label>代币地址</label>
+        <input type="text" id="tokenAddr" placeholder="0x...">
+      </div>
+      <div class="row">
+        <div class="input-group">
+          <label>合约代币余额</label>
+          <input type="text" id="contractTokenBal" placeholder="点击查询" disabled>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn btn-outline" style="flex:0 0 auto;width:auto;padding:11px 18px" onclick="queryTokenBalance()">查询余额</button>
+        <button class="btn btn-gold" style="flex:1" onclick="extractToken()">提取代币</button>
+      </div>
+      <div class="output" id="tokenExtractOutput"></div>
+    </div>
+  </div>
+
+  <!-- OWNERSHIP -->
+  <div id="tab-ownership" style="display:none">
+    <div class="card">
+      <div class="card-title"><div class="icon blue">O</div>查询所有者</div>
+      <div class="row">
+        <div class="input-group">
+          <label>钱包地址</label>
+          <input type="text" id="ownerQueryAddr" placeholder="0x...">
+        </div>
+        <div class="input-group">
+          <label>当前 Owner</label>
+          <input type="text" id="ownerResult" placeholder="点击查询" disabled>
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="queryOwner()">查询</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="icon green">R</div>转让所有权</div>
+      <div class="input-group">
+        <label>钱包地址</label>
+        <input type="text" id="transferWalletAddr" placeholder="0x...">
+      </div>
+      <div class="input-group">
+        <label>新 Owner 地址</label>
+        <input type="text" id="newOwnerAddr" placeholder="0x...">
+      </div>
+      <button class="btn btn-gold" onclick="transferOwnership()">转让所有权</button>
+      <div class="output" id="transferOutput"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="icon red">!</div>放弃所有权</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">放弃后无法恢复，所有 onlyOwner 函数将永久不可调用。</p>
+      <div class="input-group">
+        <label>钱包地址</label>
+        <input type="text" id="renounceWalletAddr" placeholder="0x...">
+      </div>
+      <button class="btn btn-red" onclick="renounceOwnership()">放弃所有权</button>
+      <div class="output" id="renounceOutput"></div>
+    </div>
+  </div>
+
+  <footer>
+    Xwallet Factory &middot; <a href="https://bscscan.com/address/0xF57418e90Ba1957998102cf16f82c88190A7b1b7" target="_blank">BscScan</a>
+  </footer>
+</div>
+
+<script>
+var FACTORY='0xF57418e90Ba1957998102cf16f82c88190A7b1b7';
+var BSC_CHAIN_ID='0x38';
+var BSC_RPC='https://bsc-dataseed.binance.org/';
+
+var FACTORY_ABI=[
+  "function createWallet() external returns (address wallet)",
+  "function getWalletCount(address creator) external view returns (uint256)",
+  "function getWallet(address creator, uint256 index) external view returns (address)",
+  "function getAllWalletsCount() external view returns (uint256)",
+  "event WalletCreated(address indexed creator, address indexed wallet, uint256 index)"
+];
+
+var WALLET_ABI=[
+  "function setWhitelistAddress(address _addr) external",
+  "function extractBNB() external",
+  "function extractToken(address token) external",
+  "function whitelistAddress() external view returns (address)",
+  "function owner() external view returns (address)",
+  "function transferOwnership(address newOwner) external",
+  "function renounceOwnership() external"
+];
+
+var ERC20_ABI=[
+  "function balanceOf(address account) external view returns (uint256)"
+];
+
+var provider=null, signer=null, userAddress=null;
+
+function toast(msg, type){
+  type=type||'info';
+  var c=document.getElementById('toastContainer');
+  var t=document.createElement('div');
+  t.className='toast '+type;
+  t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove()},300)},4000);
+}
+
+function showOutput(id, html){
+  var el=document.getElementById(id);
+  el.innerHTML=html;
+  el.classList.add('show');
+}
+
+function txLink(hash){
+  return '<a class="tx-link" href="https://bscscan.com/tx/'+hash+'" target="_blank">'+hash.slice(0,10)+'...'+hash.slice(-6)+'</a>';
+}
+
+function shortAddr(a){return a?a.slice(0,6)+'...'+a.slice(-4):''}
+
+async function ensureConnected(){
+  if(!signer){await connectWallet()}
+  return !!signer;
+}
+
+async function connectWallet(){
+  if(typeof window.ethereum==='undefined'){
+    toast('请安装 MetaMask 钱包','error');
+    return;
+  }
+  try{
+    await window.ethereum.request({method:'eth_requestAccounts'});
+    var chainId=await window.ethereum.request({method:'eth_chainId'});
+    if(chainId!==BSC_CHAIN_ID){
+      try{
+        await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BSC_CHAIN_ID}]});
+      }catch(e){
+        if(e.code===4902){
+          await window.ethereum.request({method:'wallet_addEthereumChain',params:[{
+            chainId:BSC_CHAIN_ID,chainName:'BNB Smart Chain',
+            nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},
+            rpcUrls:[BSC_RPC],blockExplorerUrls:['https://bscscan.com']
+          }]});
+        }
+      }
+    }
+    provider=new ethers.BrowserProvider(window.ethereum);
+    signer=await provider.getSigner();
+    userAddress=await signer.getAddress();
+    var btn=document.getElementById('connectBtn');
+    btn.className='connect-btn connected';
+    btn.textContent=shortAddr(userAddress);
+    document.getElementById('createBtn').disabled=false;
+    document.getElementById('refreshBtn').disabled=false;
+    toast('钱包已连接: '+shortAddr(userAddress),'success');
+    loadMyWallets();
+  }catch(e){
+    toast(e.message||'连接失败','error');
+  }
+}
+
+if(window.ethereum){
+  window.ethereum.on('accountsChanged',function(){location.reload()});
+  window.ethereum.on('chainChanged',function(){location.reload()});
+}
+
+function switchTab(name){
+  var names=['create','manage','extract','ownership'];
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    t.classList.remove('active');
+    if(names[i]===name)t.classList.add('active');
+  });
+  names.forEach(function(n){
+    document.getElementById('tab-'+n).style.display=n===name?'block':'none';
+  });
+}
+
+async function createWallet(){
+  if(!await ensureConnected())return;
+  var btn=document.getElementById('createBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> 部署中...';
+  try{
+    var f=new ethers.Contract(FACTORY,FACTORY_ABI,signer);
+    var tx=await f.createWallet();
+    showOutput('createOutput','交易已发送 '+txLink(tx.hash)+'<br>等待确认...');
+    var receipt=await tx.wait();
+    var iface=new ethers.Interface(FACTORY_ABI);
+    var parsed=null;
+    for(var i=0;i<receipt.logs.length;i++){
+      try{var p=iface.parseLog(receipt.logs[i]);if(p&&p.name==='WalletCreated'){parsed=p;break}}catch(e){}
+    }
+    var wAddr=parsed?parsed.args[1]:'';
+    showOutput('createOutput',
+      '<span class="success">部署成功</span><br>'+
+      '交易: '+txLink(tx.hash)+'<br>'+
+      '钱包地址: <span class="success">'+wAddr+'</span>'
+    );
+    toast('钱包创建成功!','success');
+    loadMyWallets();
+  }catch(e){
+    showOutput('createOutput','<span class="error">'+(e.reason||e.message)+'</span>');
+    toast('创建失败','error');
+  }
+  btn.disabled=false;
+  btn.innerHTML='创建钱包';
+}
+
+async function loadMyWallets(){
+  if(!userAddress)return;
+  try{
+    if(!provider)provider=new ethers.BrowserProvider(window.ethereum);
+    var f=new ethers.Contract(FACTORY,FACTORY_ABI,provider);
+    var count=await f.getWalletCount(userAddress);
+    var list=document.getElementById('walletList');
+    if(count===0n){list.innerHTML='<p style="font-size:13px;color:var(--text3)">暂无钱包</p>';return}
+    var html='';
+    for(var i=0;i<Number(count);i++){
+      var addr=await f.getWallet(userAddress,i);
+      html+='<div class="wallet-item" onclick="selectWallet(\''+addr+'\')">';
+      html+='<div><div class="addr">'+addr+'</div><div class="idx">#'+i+'</div></div>';
+      html+='<span class="badge badge-gold">My</span></div>';
+    }
+    list.innerHTML=html;
+  }catch(e){console.error(e)}
+}
+
+function selectWallet(addr){
+  document.getElementById('manageAddr').value=addr;
+  document.getElementById('extractBNBAddr').value=addr;
+  document.getElementById('extractTokenAddr').value=addr;
+  document.getElementById('ownerQueryAddr').value=addr;
+  document.getElementById('transferWalletAddr').value=addr;
+  document.getElementById('renounceWalletAddr').value=addr;
+  switchTab('manage');
+  readWhitelist(addr);
+}
+
+async function readWhitelist(addr){
+  try{
+    var p=provider||new ethers.BrowserProvider(window.ethereum);
+    var w=new ethers.Contract(addr,WALLET_ABI,p);
+    var wl=await w.whitelistAddress();
+    document.getElementById('currentWhitelist').value=wl;
+  }catch(e){
+    document.getElementById('currentWhitelist').value='读取失败';
+  }
+}
+
+async function setWhitelist(){
+  var addr=document.getElementById('manageAddr').value.trim();
+  var wl=document.getElementById('newWhitelist').value.trim();
+  if(!addr||!wl){toast('请填写钱包地址和新白名单','error');return}
+  if(!await ensureConnected())return;
+  try{
+    var w=new ethers.Contract(addr,WALLET_ABI,signer);
+    var tx=await w.setWhitelistAddress(wl);
+    showOutput('whitelistOutput','交易已发送 '+txLink(tx.hash));
+    await tx.wait();
+    showOutput('whitelistOutput','<span class="success">白名单已更新</span><br>交易: '+txLink(tx.hash));
+    document.getElementById('currentWhitelist').value=wl;
+    toast('白名单更新成功','success');
+  }catch(e){showOutput('whitelistOutput','<span class="error">'+(e.reason||e.message)+'</span>');toast('操作失败','error')}
+}
+
+async function queryBNBBalance(){
+  var addr=document.getElementById('extractBNBAddr').value.trim();
+  if(!addr){toast('请填写钱包地址','error');return}
+  try{
+    var p=new ethers.JsonRpcProvider(BSC_RPC);
+    var bal=await p.getBalance(addr);
+    document.getElementById('contractBNBBal').value=ethers.formatEther(bal)+' BNB';
+  }catch(e){toast('查询失败','error')}
+}
+
+async function extractBNB(){
+  var addr=document.getElementById('extractBNBAddr').value.trim();
+  if(!addr){toast('请填写钱包地址','error');return}
+  if(!await ensureConnected())return;
+  try{
+    var w=new ethers.Contract(addr,WALLET_ABI,signer);
+    var tx=await w.extractBNB();
+    showOutput('bnbExtractOutput','交易已发送 '+txLink(tx.hash));
+    await tx.wait();
+    showOutput('bnbExtractOutput','<span class="success">BNB 已提取</span><br>交易: '+txLink(tx.hash));
+    toast('BNB 提取成功','success');
+  }catch(e){showOutput('bnbExtractOutput','<span class="error">'+(e.reason||e.message)+'</span>');toast('提取失败','error')}
+}
+
+async function queryTokenBalance(){
+  var wAddr=document.getElementById('extractTokenAddr').value.trim();
+  var tAddr=document.getElementById('tokenAddr').value.trim();
+  if(!wAddr||!tAddr){toast('请填写钱包和代币地址','error');return}
+  try{
+    var p=new ethers.JsonRpcProvider(BSC_RPC);
+    var token=new ethers.Contract(tAddr,ERC20_ABI,p);
+    var bal=await token.balanceOf(wAddr);
+    document.getElementById('contractTokenBal').value=bal.toString();
+  }catch(e){toast('查询失败','error')}
+}
+
+async function extractToken(){
+  var wAddr=document.getElementById('extractTokenAddr').value.trim();
+  var tAddr=document.getElementById('tokenAddr').value.trim();
+  if(!wAddr||!tAddr){toast('请填写钱包和代币地址','error');return}
+  if(!await ensureConnected())return;
+  try{
+    var w=new ethers.Contract(wAddr,WALLET_ABI,signer);
+    var tx=await w.extractToken(tAddr);
+    showOutput('tokenExtractOutput','交易已发送 '+txLink(tx.hash));
+    await tx.wait();
+    showOutput('tokenExtractOutput','<span class="success">代币已提取</span><br>交易: '+txLink(tx.hash));
+    toast('代币提取成功','success');
+  }catch(e){showOutput('tokenExtractOutput','<span class="error">'+(e.reason||e.message)+'</span>');toast('提取失败','error')}
+}
+
+async function queryOwner(){
+  var addr=document.getElementById('ownerQueryAddr').value.trim();
+  if(!addr){toast('请填写钱包地址','error');return}
+  try{
+    var p=provider||new ethers.JsonRpcProvider(BSC_RPC);
+    var w=new ethers.Contract(addr,WALLET_ABI,p);
+    var o=await w.owner();
+    document.getElementById('ownerResult').value=o;
+  }catch(e){toast('查询失败','error')}
+}
+
+async function transferOwnership(){
+  var wAddr=document.getElementById('transferWalletAddr').value.trim();
+  var newOwner=document.getElementById('newOwnerAddr').value.trim();
+  if(!wAddr||!newOwner){toast('请填写完整','error');return}
+  if(!await ensureConnected())return;
+  try{
+    var w=new ethers.Contract(wAddr,WALLET_ABI,signer);
+    var tx=await w.transferOwnership(newOwner);
+    showOutput('transferOutput','交易已发送 '+txLink(tx.hash));
+    await tx.wait();
+    showOutput('transferOutput','<span class="success">所有权已转让</span><br>交易: '+txLink(tx.hash));
+    toast('转让成功','success');
+  }catch(e){showOutput('transferOutput','<span class="error">'+(e.reason||e.message)+'</span>');toast('转让失败','error')}
+}
+
+async function renounceOwnership(){
+  var wAddr=document.getElementById('renounceWalletAddr').value.trim();
+  if(!wAddr){toast('请填写钱包地址','error');return}
+  if(!confirm('确定要放弃所有权吗？此操作不可恢复！'))return;
+  if(!await ensureConnected())return;
+  try{
+    var w=new ethers.Contract(wAddr,WALLET_ABI,signer);
+    var tx=await w.renounceOwnership();
+    showOutput('renounceOutput','交易已发送 '+txLink(tx.hash));
+    await tx.wait();
+    showOutput('renounceOutput','<span class="success">所有权已放弃</span><br>交易: '+txLink(tx.hash));
+    toast('所有权已放弃','success');
+  }catch(e){showOutput('renounceOutput','<span class="error">'+(e.reason||e.message)+'</span>');toast('操作失败','error')}
+}
+</script>
+</body>
+</html>
